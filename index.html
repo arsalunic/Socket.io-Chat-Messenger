@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset = "utf8"/>
+	<title>Chat Server</title>
+		
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+	<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+	
+    
+    <style>
+		#user_ListDiv{
+			height:200px;
+			overflow: auto;
+			border: solid 1px black;
+			background-color: #58D68D;
+		}
+		
+		#contents{
+			width: 100px;
+			height: 100px;
+		}
+		
+		#chat_Log{
+			float: left;
+			width: 70%;
+			height: 200px;
+			background-color: #58D68D;
+		}
+		
+		#input_Text{
+			border: solid 1px black;
+			width: 50%;
+			background-color: #58D68D;
+		}		
+    
+    </style>
+	
+	<body>
+
+		<h1>Chat Server</h1>
+		
+		<div = "contents">
+			<div id="chat_LogDiv"> 
+				<textarea id="chat_Log"></textarea>
+			</div>
+		</div>
+			
+		<div id="user_ListDiv">
+			<h3>Users</h3>
+			<ul id="user_List"></ul>
+			
+		</div>
+		
+		<input id="input_Text">	
+		
+	</body>
+
+    <script>
+    $(document).ready(function(){
+		
+			var userName = prompt("Please enter your name: ")||"User";
+			
+			var socket = io(); //connect to the server
+			socket.on('connect', function(){
+				socket.emit("intro", userName);
+			});
+			
+			$('#input_Text').keypress(function(ev){
+					if(ev.which===13){
+
+						//send message
+						socket.emit("message",$(this).val());
+
+						ev.preventDefault();
+						$("#chat_Log").append((new Date()).toLocaleTimeString()+", "+userName+": "+$(this).val()+"\n")
+						$(this).val(""); //empty the input
+					}
+			});
+			
+			socket.on("message",function(data){
+				$("#chat_Log").append(data+"\n");
+				$('#chat_Log')[0].scrollTop=$('#chat_Log')[0].scrollHeight; //scroll to the bottom
+			});
+		
+
+			$("#user_List").dblclick(function(){
+				var msg = prompt("Please enter your name: ");
+				socket.emit("private", msg);
+
+			});
+
+
+			socket.on("user_List",function(data){
+				$("#user_List").empty();
+
+				for (var i=0; i<data.length;i++){
+					$('#user_List').append(data[i]+"<br>");
+				}
+			});
+
+		});
+
+   
+    </script>   
+	</head>
+</html>
